@@ -1,0 +1,167 @@
+1) Selecione o nome dos autores e das instituições que cada um representa.
+ 
+SELECT A.NOME, I.NOME
+FROM AUTOR A JOIN INSTITUICAO I
+ON I.CODIGO = A.CODIGO_INSTITUICAO;
+
+2) Selecione o nome dos autores e das instituições que cada um representa. Autores sem instituição
+também devem ser mostrados, e no lugar do nome da instituição deve ser mostrado a mensagem
+‘Sem Instituição’.
+
+SELECT A.NOME AS NOME_AUTOR, COALESCE(I.NOME,'SEM INSTITUICAO')-- AS ALTERAR NOMES*
+FROM AUTOR A LEFT JOIN INSTITUICAO I
+ON I.CODIGO = A.CODIGO_INSTITUICAO;
+
+
+3) Selecione o nome dos autores e das instituições que cada um representa. Autores sem instituição
+também devem ser mostrados, e no lugar do nome da instituição deve ser mostrado a mensagem
+‘Sem Instituição’. Também deve ser mostrado o nome das instituições sem autores, e no lugar do
+nome do autor deve ser mostrado a mensagem ‘Sem Autor’.
+
+SELECT COALESCE(A.NOME,'SEM AUTOR') AS NOME_AUTOR, COALESCE(I.NOME,'SEM INSTITUICAO') AS INSTITUICAO
+FROM AUTOR A FULL JOIN INSTITUICAO I
+ON I.CODIGO = A.CODIGO_INSTITUICAO;
+
+4) Selecione o nome dos artigos e o nome das categorias dos artigos, ordene a saída pelo nome do
+artigo. Limite a saída para 3 a partir do segundo.
+
+SELECT ART.TITULO, CAT_ART.NOME -- faltou selecionar a categoria dos artigos
+FROM ARTIGO ART JOIN CATEGORIA CAT_ART ON CODIGO_CATEGORIA = ART.CODIGO_CATEGORIA
+ORDER BY ART.TITULO
+LIMIT 3 OFFSET 1
+
+5) Selecione o nome dos autores, o nome dos artigos publicados pelos autores e o nome da
+categoria do artigo. A saída deve conter os autores com renda maior que R$ 5500,00.
+
+SELECT A.NOME, ART.TITULO, CAT.NOME
+FROM AUTOR A 
+JOIN ARTIGO_AUTOR ART_A ON A.CODIGO = ART_A.CODIGO_AUTOR 
+JOIN ARTIGO ART ON ART.CODIGO = ART_A.CODIGO_ARTIGO
+JOIN CATEGORIA CAT ON CAT.CODIGO = ART.CODIGO_CATEGORIA
+WHERE A.RENDA > 5500;
+
+6) Selecione o nome dos autores, o nome dos artigos publicados pelos autores, preço de venda dos
+artigos, o nome da categoria do artigo e o nome da instituição que o autor esta vinculado. A saída
+deve conter os artigos com preço de venda entre R$100,00 e R$ 250,00 dos autores ativos.
+
+SELECT A.NOME, ART.TITULO, ART.PRECO_VENDA, CAT.NOME, INST.NOME
+FROM AUTOR A 
+JOIN ARTIGO_AUTOR ART_A ON A.CODIGO = ART_A.CODIGO_AUTOR 
+JOIN ARTIGO ART ON ART.CODIGO = ART_A.CODIGO_ARTIGO
+JOIN CATEGORIA CAT ON CAT.CODIGO = ART.CODIGO_CATEGORIA
+JOIN INSTITUICAO INST ON INST.CODIGO = A.CODIGO_INSTITUICAO
+WHERE ART.PRECO_VENDA BETWEEN 100 AND 250 -- AQUI EU ERREI, NÃO PUS O CODIGO
+AND A.ATIVO = '1'; --USUARIO ATIVO OU INATIVO- USOU O BOOLEAN ATIVO 1, INATIVO 0
+
+---------------------------------------------------------------------------------------------------------------
+CREATE TABLE categoria(
+ codigo serial NOT NULL,
+ nome varchar(50) NOT NULL,
+ primary key (codigo)
+);
+
+CREATE TABLE instituicao(
+ codigo serial NOT NULL,
+ nome varchar(50) NOT NULL,
+ data_fundacao date,
+ primary key (codigo)
+);
+
+CREATE TABLE artigo(
+ codigo serial NOT NULL,
+ titulo varchar(50) NOT NULL,
+ data_publicacao date,
+ status varchar(50) NOT NULL,
+ url varchar (50) NOT NULL,
+ preco_venda numeric(10,2),
+ codigo_categoria int,
+ primary key (codigo),
+ FOREIGN KEY (codigo_categoria) REFERENCES categoria(codigo)
+);
+
+CREATE TABLE autor(
+ codigo serial NOT NULL,
+ nome varchar(50) NOT NULL,
+ cpf varchar(11) unique NOT NULL,
+ renda numeric(10,2),
+ email varchar(50) NOT NULL,
+ data_nascimento date,
+ data_cadastro timestamp,
+ ativo boolean,
+ codigo_instituicao int,
+ primary key(codigo),
+ foreign key(codigo_instituicao) references instituicao(codigo)
+);
+
+
+CREATE TABLE artigo_autor(
+ codigo_artigo int,
+ codigo_autor int,
+ primary key (codigo_artigo, codigo_autor),
+ FOREIGN KEY(codigo_artigo) REFERENCES artigo(codigo),
+ FOREIGN KEY(codigo_autor) REFERENCES autor(codigo)
+);
+select * from artigo_autor
+
+insert into categoria(nome)
+values ('Banco de Dados');
+insert into categoria(nome)
+values ('Engenharia de Software');
+insert into categoria(nome)
+values ('Grafos');
+insert into instituicao(nome, data_fundacao)
+values ('IFMS', '2008-12-29');
+insert into instituicao(nome, data_fundacao)
+values ('UFMS', '1962-03-01');
+insert into instituicao(nome, data_fundacao)
+values ('UEMS', '1993-12-22');
+insert into instituicao(nome, data_fundacao)
+values ('UFGD', '2005-08-01');
+
+insert into artigo(titulo, data_publicacao, status, url, preco_venda, codigo_categoria)
+values('Left Join','2020-09-08','finalizado','http://www.artigosbd.publicado/',125.99, 1);
+insert into artigo(titulo, data_publicacao, status, url, preco_venda, codigo_categoria)
+values('Requisitos','2018-07-17','finalizado','http://www.artigoes.publicado/',89.99, 2);
+insert into artigo(titulo, data_publicacao, status, url, preco_venda, codigo_categoria)
+values('Algoritmo de Dijkstra','2019-03-04','finalizado','http://www.artigosgrafos.publicado/',69.99, 3);
+insert into artigo(titulo, data_publicacao, status, url, preco_venda, codigo_categoria)
+values('Gerenciamento de Transações',current_date,'Em
+revisão','http://www.artigosbd.publicado/',300.90, 1);
+insert into artigo(titulo, data_publicacao, status, url, preco_venda, codigo_categoria)
+values('Triggers','2017-04-21','finalizado','http://www.artigosbd.publicado/',119.99, 1);
+
+insert into autor(nome, cpf, renda, email, data_nascimento, data_cadastro, ativo, codigo_instituicao)
+values('Fulano Pereira', '11199999922', 1200.01, 'fulanopereira@email.com', '1985-12-21',
+current_timestamp, '1', 1);
+insert into autor(nome, cpf, renda, email, data_nascimento, data_cadastro, ativo)
+values('Siqueira Beltrano', '78214698752', 6000.00, 'siqueirabeltrano1@email.com', '1989-01-15','2016-05-09', '1');
+insert into autor(nome, cpf, renda, email, data_nascimento, data_cadastro, ativo, codigo_instituicao)
+values('Cicrano Silva', '55566644433', 2500.00, 'cicranopereira@email.com', '1973-05-11', '2017-05-06', '1',1);
+insert into autor(nome, cpf, renda, email, data_nascimento, data_cadastro, ativo, codigo_instituicao)
+values('Beltrano Santos', '22211188899', 4800.00, 'beltranosantos@email.com', '1988-07-08',
+current_timestamp, '1', 2);
+insert into autor(nome, cpf, renda, email, data_nascimento, data_cadastro, ativo, codigo_instituicao)
+values('Fulana Silva', '33377744419', 7000.00, 'fulanasilva@email.com', '2000-02-01', '2020-02-02
+08:25:00', '1', 3);
+insert into autor(nome, cpf, renda, email, data_nascimento, data_cadastro, ativo, codigo_instituicao)
+values('Maria Joana', '77377744419', 9000.00, 'mjoana@email.com', '2001-01-03', '2018-01-02
+', '0', 3);
+
+insert into artigo_autor(codigo_artigo, codigo_autor)
+values(1,1);
+insert into artigo_autor(codigo_artigo, codigo_autor)
+values(5,1);
+insert into artigo_autor(codigo_artigo, codigo_autor)
+values(4,1);
+insert into artigo_autor(codigo_artigo, codigo_autor)
+values(5,2);
+insert into artigo_autor(codigo_artigo, codigo_autor)
+values(1,2);
+insert into artigo_autor(codigo_artigo, codigo_autor)
+values(2,3);
+insert into artigo_autor(codigo_artigo, codigo_autor)
+values(3,4);
+insert into artigo_autor(codigo_artigo, codigo_autor)
+values(2,6);
+insert into artigo_autor(codigo_artigo, codigo_autor)
+values(3,5)
