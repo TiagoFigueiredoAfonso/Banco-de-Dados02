@@ -1,0 +1,190 @@
+1) Selecione a média salarial por departamento. Renomeie a saída.
+
+SELECT DP.NOME AS NOME_DEPARTAMENTO, ROUND(AVG(F.SALARIO),2) AS MEDIA_DEPARTAMENTO
+FROM DEPARTAMENTO DP JOIN FUNCIONARIO F 
+ON DP.CODIGO = F.CODIGO_DEPARTAMENTO
+GROUP BY DP.NOME; -- TRUNC É MELHOR QUE AVG PQ NÃO ARREDONDA
+
+
+
+2) Selecione a quantidade de funcionários por departamento. Somente departamentos com mais de
+um funcionário devem ser mostradas. Renomeie a saída.
+
+SELECT  DP.NOME AS DEPARTAMENTO, COUNT(F.NOME) AS SAIDA_MAIS_DE_UM_FUNC
+FROM DEPARTAMENTO DP JOIN FUNCIONARIO F ON DP.CODIGO = F.CODIGO_DEPARTAMENTO
+GROUP BY DP.NOME
+HAVING COUNT(*) > 1;
+
+SELECT DP.NOME AS NOME_DEPARTAMENTO, COUNT(*) AS QTD
+FROM DEPARTAMENTO DP JOIN FUNCIONARIO F 
+ON DP.CODIGO = F.CODIGO_DEPARTAMENTO
+GROUP BY DP.NOME
+HAVING  COUNT(*) > 1;--HAVING É O FILTRO DO GROUP BY !!
+
+
+3) Selecione a quantidade de funcionário por projeto. Ordene a saída pelo nome do projeto
+
+SELECT COUNT(P.NOME) AS QUANTIDADE_POR_PROJETO, P.NOME AS PROJETO
+FROM FUNCIONARIO F 
+JOIN DEPARTAMENTO DP ON DP.CODIGO = F.CODIGO_DEPARTAMENTO
+JOIN PROJETO P ON DP.CODIGO = P.CODIGO_DEPARTAMENTO -- A JUNCAO DEVERIA SER COM FUNC => FUNC_PROJ => PROJ
+GROUP BY P.NOME
+ORDER BY P.NOME;
+
+4) Selecione o menor e maior valor dos projeto por departamento.
+
+SELECT D.NOME, MIN(P.VERBA), MAX(P.VERBA)
+FROM PROJETO P JOIN DEPARTAMENTO D ON D.CODIGO = P.CODIGO_DEPARTAMENTO
+GROUP BY D.NOME
+
+-- RESPOSTA DO PROFESSOR ABAIXO: OBS: MESMA RESPOSTA Q A MINHA
+SELECT  DEP.NOME,  MAX(PROJ.VERBA), MIN(PROJ.VERBA)
+FROM DEPARTAMENTO DEP JOIN PROJETO PROJ ON DEP.CODIGO = PROJ.CODIGO_DEPARTAMENTO
+GROUP BY DEP.NOME;
+5) Selecione o nome dos funcionários que possuem a letra ‘o’, com tamanho mínimo de 6 letras no
+nome e que trabalham em departamentos localizados em Campo Grande.
+
+localizacao( codigo, nome)
+departamento( codigo, nome, data_criacao, codigo_localizacao)
+funcionario(codigo, nome, salario, data_contratacao, data_cadastro, codigo_departamento)
+projeto(codigo, nome, verba, ativo, codigo_departamento)
+funcionario_projeto(codigo_funcionario, codigo_projeto)
+
+SELECT F.NOME, L.NOME AS LOCALIZACAO
+FROM FUNCIONARIO F 
+JOIN DEPARTAMENTO DP ON DP.CODIGO = F.CODIGO_DEPARTAMENTO
+JOIN LOCALIZACAO L  ON L.CODIGO = DP.CODIGO_LOCALIZACAO
+WHERE F.NOME ILIKE '%o%' -- ILIKE NAO DIFERENCIA MAISC DE MINUSC
+AND F.NOME LIKE '______%' 
+AND L.NOME = 'Campo Grande';
+
+SELECT
+FROM
+---------------------------------------------------------------------------------------------------------
+CREATE TABLE localizacao
+( codigo serial  NOT NULL,
+nome varchar(50) NOT NULL,
+primary key (codigo)
+);
+
+
+CREATE TABLE departamento
+( codigo serial  NOT NULL,
+nome varchar(50) NOT NULL,
+codigo_localizacao int,
+data_criacao date,
+primary key (codigo),
+FOREIGN KEY(codigo_localizacao) REFERENCES localizacao(codigo)
+);
+
+
+
+CREATE TABLE funcionario
+( codigo serial  NOT NULL,
+nome varchar(50) NOT NULL,
+salario numeric(10,2),
+data_contratacao date,
+data_cadastro timestamp,
+codigo_departamento int,
+primary key (codigo),
+FOREIGN KEY(codigo_departamento) REFERENCES departamento(codigo)
+);
+
+
+CREATE TABLE projeto
+( codigo serial  NOT NULL,
+nome varchar(50) NOT NULL,
+verba numeric(12,2),
+ativo boolean,
+codigo_departamento int,
+primary key (codigo),
+FOREIGN KEY(codigo_departamento) REFERENCES departamento(codigo)
+);
+
+CREATE TABLE funcionario_projeto
+( codigo_funcionario int  NOT NULL,
+  codigo_projeto int  NOT NULL,
+primary key (codigo_funcionario, codigo_projeto),
+FOREIGN KEY(codigo_funcionario) REFERENCES funcionario(codigo),
+FOREIGN KEY(codigo_projeto) REFERENCES projeto(codigo)
+);
+
+
+insert into localizacao(nome)
+values ('Campo Grande');
+insert into localizacao(nome)
+values ('Dourados');
+insert into localizacao(nome)
+values ('Três Lagoas');
+insert into localizacao(nome)
+values ('Corumbá');
+insert into localizacao(nome)
+values ('Ponta Porã');
+
+insert into departamento(nome,data_criacao,codigo_localizacao)
+values ('Tecnologia da Informação',  current_date-3000, 1);
+insert into departamento(nome,data_criacao,codigo_localizacao)
+values ('Financeiro',  current_date-4000, 1);
+insert into departamento(nome,data_criacao,codigo_localizacao)
+values ('Logística',  current_date-1000, 2);
+insert into departamento(nome,data_criacao,codigo_localizacao)
+values ('Importação',  current_date-2000, 5);
+insert into departamento(nome,data_criacao,codigo_localizacao)
+values ('Recursos Humanos',  current_date-300, 1);
+insert into departamento(nome,data_criacao,codigo_localizacao)
+ values ('Vestuário',  current_date, 4);
+insert into departamento(nome,data_criacao,codigo_localizacao)
+values ('Estoque',  current_date-3500, 3);
+
+insert into funcionario(nome, salario, data_contratacao, data_cadastro, codigo_departamento)
+values ('Tomas', 5000.00, '2000-09-12', '2000-09-12 08:00:00',  1);
+insert into funcionario(nome, salario, data_contratacao, data_cadastro, codigo_departamento)
+values ('Jaqueline', 2000.00, '2010-10-25','2010-10-25 12:35:00',  2);
+insert into funcionario(nome, salario, data_contratacao, data_cadastro, codigo_departamento)
+values ('Jorge José', 3000.00, current_date, current_timestamp,  3);
+insert into funcionario(nome, salario, data_contratacao, data_cadastro, codigo_departamento)
+values ('Vagner', 3500.00,  '2000-01-01', '2000-01-02 08:00:00', 4);
+insert into funcionario(nome, salario, data_contratacao, data_cadastro, codigo_departamento)
+values ('Lainez', 9000.00,  '2018-10-12', '2018-10-12 08:00:00', 5);
+insert into funcionario(nome, salario, data_contratacao, data_cadastro, codigo_departamento)
+values ('Anderson', 10000.00, '2020-11-12', '2020-11-12 09:55:00', 1);
+insert into funcionario(nome, salario, data_contratacao, data_cadastro, codigo_departamento)
+values ('Odair', 1000.00,  '2019-07-05', '2019-07-05 14:55:00', 6);
+insert into funcionario(nome, salario, data_contratacao, data_cadastro, codigo_departamento)
+values ('Felipe', 15000.00, '2016-04-05', '2016-04-06 17:33:00',  1);
+insert into funcionario(nome, salario, data_contratacao, data_cadastro, codigo_departamento)
+values ('Joaquina', 2000.00, '2014-12-04', '2014-12-04 13:13:00',   1);
+insert into funcionario(nome, salario, data_contratacao, data_cadastro, codigo_departamento)
+values ('Josefina Amaral', 3000.00, current_date, current_timestamp,  null);
+
+insert into projeto(nome, verba,  ativo, codigo_departamento)
+values ('Desenvolvimento Scrum', 8999, '1', 1);
+insert into projeto(nome, verba,  ativo, codigo_departamento)
+values ('Economia Industrial', 7898, '1', 2);
+insert into projeto(nome, verba,  ativo, codigo_departamento)
+values ('Estudo de Grafos em Rodovias', 98000,'1',  3);
+insert into projeto(nome, verba,  ativo, codigo_departamento)
+values ('Relações Internacionais', 10000, '0', 4);
+insert into projeto(nome, verba,  ativo, codigo_departamento)
+values ('Gerência de Recursos',9874, '0', 5);
+insert into projeto(nome, verba,  ativo, codigo_departamento)
+values ('Tendência em Produtos', 18654, '1', 6);
+insert into projeto(nome, verba,  ativo, codigo_departamento)
+values ('Armazenamento de Produtos Perecíveis', 75000, '1', 7);
+
+insert into funcionario_projeto(codigo_funcionario, codigo_projeto)
+values (1, 1);
+insert into funcionario_projeto(codigo_funcionario, codigo_projeto)
+values (2 , 2);
+insert into funcionario_projeto(codigo_funcionario, codigo_projeto)
+values (3 , 3);
+insert into funcionario_projeto(codigo_funcionario, codigo_projeto)
+values (4 , 4);
+insert into funcionario_projeto(codigo_funcionario, codigo_projeto)
+values (5 , 5);
+insert into funcionario_projeto(codigo_funcionario, codigo_projeto)
+values (6 , 6);
+insert into funcionario_projeto(codigo_funcionario, codigo_projeto)
+values (7, 7);
+insert into funcionario_projeto(codigo_funcionario, codigo_projeto)
+values (8, 2);
